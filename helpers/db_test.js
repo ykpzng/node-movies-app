@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 
+//You must put a connection to your database here.
 const connectionString = '<MongoDB connection String>';
 
 
