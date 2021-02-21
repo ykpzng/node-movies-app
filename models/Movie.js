@@ -21,3 +21,5 @@ const MovieSchema = new Schema({
 
 
 module.exports = mongoose.model('movie', MovieSchema);
+
+//2- Schema oluşturduk ve root oluşturacağız sonra app.js de kullanıma açacağım
