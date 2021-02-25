@@ -6,6 +6,7 @@ const MovieModel = require('../models/Movie');
 
 //!----------------------------------------------------------
 //GET ALL MOVIES
+//http://localhost:3000/api/movies
 router.get('/', (req, res) => {
   MovieModel.find({})
     .then(data => { res.json(data) })
@@ -19,13 +20,35 @@ router.get('/top10', (req, res) => {
     .catch(err => { res.json(err) })
 })
 
+//GET Movies With Director
+router.get('/listWithDirector', (req, res, next) => {
+  MovieModel.aggregate([
+    {
+      $lookup: {
+        from: 'directors',
+        localField: 'director_id',
+        foreignField: '_id',
+        as: 'director'
+      }
+    },
 
-//GET BETWEEN YEAR MOVIES
+  ])
+    .then((data) => { res.json(data) })
+    .catch((err) => {
+      next({ message: "The director was not fount.", code: 99 })
+      res.json(err)
+    })
+})
+
+
+//GET BETWEEN YEAR MOVIES //gte=greater than or equal , lte= less than or equal
+//http://localhost:3000/api/movies/between/1972/2008
 router.get('/between/:start_year/:end_year', (req, res) => {
+  const { start_year, end_year } = req.params;
   MovieModel.find({
     year: {
-      $gte: req.params.start_year,
-      $lt: req.params.end_year
+      "$gte": parseInt(start_year),
+      "$lte": parseInt(end_year)
     }
   })
     .then(data => { res.json(data) })
@@ -33,13 +56,10 @@ router.get('/between/:start_year/:end_year', (req, res) => {
 })
 
 
-//GET A MOVIE -1-
+//GET A MOVIE -1-   Burada hata tetiklemesi yapıldı
 router.get('/:movieId', (req, res, next) => {
   MovieModel.findById(req.params.movieId)
     .then(data => {
-      if (data == null) {
-        next({ message: "The movie was not found.", code: 99 })
-      }
       res.json(data)
     })
     .catch(err => {
@@ -60,7 +80,6 @@ router.get('/:movieId', function (req, res, next) {
     }
   })
 }); */
-
 
 
 //!----------------------------------------------------------
@@ -90,29 +109,44 @@ router.post('/', function (req, res) {
 
 
 //!----------------------------------------------------------
-//PUT MOVIE
+//PUT MOVIE  //Üçüncü parametre new:true, update edilen verinin güncel halinin gönmesini sağlar
 router.put('/:movieId', (req, res, next) => {
   MovieModel.findByIdAndUpdate(req.params.movieId, {
+    // req.body  /* Kısaca bu kodu da yazabiliriz */
     title: req.body.title,
     imdb_score: req.body.imdb_score,
     category: req.body.category,
     country: req.body.country,
     year: req.body.year
-  })
+  }, { new: true })
     .then(data => { res.json(data) })
-    .catch(err => { res.json(err) })
+    .catch(err => {
+      next({ message: 'The movie was not fount.', code: 99 })
+      res.json(err)
+    })
 })
 
 
 //!------------------------------------------------------------
 //DELETE MOVIE
 router.delete('/:movieId', (req, res, next) => {
-  MovieModel.findByIdAndDelete(req.params.movieId,)
+  MovieModel.findByIdAndRemove(req.params.movieId,)
     .then(data => { res.json(data) })
-    .catch(err => { res.json(err) })
+    .catch(err => {
+      next({ message: 'The movie was not fount.', code: 99 })
+      res.json(err)
+    })
 })
 
 
 
 
 module.exports = router;
+
+/*
+
+modelName.functionName(filter,probObjs).[skip-limit-sort]
+                        .then()
+                        .catch()
+
+                        */
